@@ -63,36 +63,41 @@ if( trim(strip_tags($equella->intro)) ) {
 	echo $OUTPUT->box_end();
 }
 
-$mimetype = resourcelib_guess_url_mimetype($equella->url);
 $link = html_writer::tag('a', $equella->name, array('href'=>str_replace('&amp;', '&', $url)));
 $clicktoopen = get_string('clicktoopen', 'equella', $link);
-
-/////////////////////////////////////////////////////////////
-//
-// The following is copied from /mod/resource/locallib.php
-//
-$mediarenderer = $PAGE->get_renderer('core', 'media');
-$embedoptions = array(
-    core_media::OPTION_TRUSTED => true,
-    core_media::OPTION_BLOCK => true,
-);
-$moourl = new moodle_url($url);
-
-if (file_mimetype_in_typegroup($mimetype, 'web_image')) {
-	// It's an image
-    echo resourcelib_embed_image($url, null);
-
-} else if ($mimetype === 'application/pdf') {
-    // PDF document
-    echo resourcelib_embed_pdf($url, null, $clicktoopen);
-
-} else if ($mediarenderer->can_embed_url($moourl, $embedoptions)) {
-    // Media (audio/video) file.
-    echo $mediarenderer->embed_url($moourl, null, 0, 0, $embedoptions);
-
-} else {
-    // anything else - just try object tag enlarged as much as possible
+if ($equella->displaymode == EQUELLA_DISPLAY_VIEWER) {
+    $mimetype = 'text/html';
     echo resourcelib_embed_general($url, null, $clicktoopen, $mimetype);
+} else {
+    $mimetype = resourcelib_guess_url_mimetype($equella->url);
+
+    /////////////////////////////////////////////////////////////
+    //
+    // The following is copied from /mod/resource/locallib.php
+    //
+    $mediarenderer = $PAGE->get_renderer('core', 'media');
+    $embedoptions = array(
+        core_media::OPTION_TRUSTED => true,
+        core_media::OPTION_BLOCK => true,
+    );
+    $moourl = new moodle_url($url);
+
+    if (file_mimetype_in_typegroup($mimetype, 'web_image')) {
+        // It's an image
+        echo resourcelib_embed_image($url, null);
+
+    } else if ($mimetype === 'application/pdf') {
+        // PDF document
+        echo resourcelib_embed_pdf($url, null, $clicktoopen);
+
+    } else if ($mediarenderer->can_embed_url($moourl, $embedoptions)) {
+        // Media (audio/video) file.
+        echo $mediarenderer->embed_url($moourl, null, 0, 0, $embedoptions);
+
+    } else {
+        // anything else - just try object tag enlarged as much as possible
+        echo resourcelib_embed_general($url, null, $clicktoopen, $mimetype);
+    }
 }
 
 echo $OUTPUT->footer($course);

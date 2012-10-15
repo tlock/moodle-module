@@ -38,6 +38,8 @@ foreach ($links as $link)
 	$mod->introformat = FORMAT_HTML;
 	$mod->attachmentuuid = $link['attachmentUuid'];
 	$mod->url = $link['url'];
+        // Use EQUELLA viewer by default
+        $mod->displaymode = EQUELLA_DISPLAY_VIEWER;
 	if (isset($link['activationUuid']))
 	{
 		$mod->activation = $link['activationUuid'];

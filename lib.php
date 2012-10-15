@@ -23,6 +23,10 @@ define('EQUELLA_CONFIG_SELECT_RESTRICT_NONE', 'none');
 define('EQUELLA_CONFIG_SELECT_RESTRICT_ITEMS_ONLY', 'itemonly');
 define('EQUELLA_CONFIG_SELECT_RESTRICT_ATTACHMENTS_ONLY', 'attachmentonly');
 
+define('EQUELLA_DISPLAY_SAMEWINDOW', 0);
+define('EQUELLA_DISPLAY_POPUP', 1);
+define('EQUELLA_DISPLAY_VIEWER', 2);
+
 function equella_supports($feature) {
     switch($feature) {
         case FEATURE_MOD_INTRO:               return true;
@@ -57,7 +61,7 @@ function equella_add_instance($equella) {
 }
 
 function equella_postprocess(&$resource) {
-	if( isset($resource->windowpopup) && $resource->windowpopup ) {
+	if( isset($resource->displaymode) && $resource->displaymode == EQUELLA_DISPLAY_POPUP ) {
 		$optionlist = array();
 		foreach( equella_get_window_options() as $option ) {
 			if (isset($resource->$option))
@@ -67,7 +71,6 @@ function equella_postprocess(&$resource) {
 			}
 		}
 		$resource->popup = implode(',', $optionlist);
-		unset($resource->windowpopup);
 	} else {
 		$resource->popup = '';
 	}
@@ -77,11 +80,12 @@ function equella_postprocess(&$resource) {
 	$url = $resource->url;
 	preg_match($pattern, $url, $matches);
 	$resource->uuid = $matches['uuid'];
-	$resource->version=$matches['version'];
-	$resource->path=$matches['path'];
+	$resource->version = $matches['version'];
+	$resource->path = $matches['path'];
 }
 
 function equella_update_instance($equella) {
+	global $DB;
 	// Given an object containing all the necessary data,
 	// will update an existing instance with new data.
 
@@ -89,7 +93,6 @@ function equella_update_instance($equella) {
 	$equella->id = $equella->instance;
 	equella_postprocess($equella);
 
-	global $DB;
 	return $DB->update_record("equella", $equella);
 }
 
@@ -178,4 +181,13 @@ function equella_guess_icon($fullurl) {
     return $icon;
 }
 
-?>
+function equella_guess_url_mimetype($fullurl) {
+    global $CFG;
+    require_once("$CFG->libdir/filelib.php");
+
+    if (strpos($fullurl, '.vi') !== false) {
+        return 'text/html';
+    }
+
+    return resourcelib_guess_url_mimetype($fullurl);
+}

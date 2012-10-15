@@ -56,11 +56,11 @@ function xmldb_equella_upgrade($oldversion) {
         if (!$dbman->field_exists($table, $field2)) {
             $dbman->add_field($table, $field2);
         }
-	
+
 		$equella_items = $DB->get_records('equella');
 		$pattern = "/(?P<uuid>[\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12})\/(?P<version>[0-9]*)/";
-	
-		foreach ($equella_items as $item) 
+
+		foreach ($equella_items as $item)
 		{
 			$url = $item->url;
 			preg_match($pattern, $url, $matches);
@@ -81,8 +81,8 @@ function xmldb_equella_upgrade($oldversion) {
 
 		$equella_items = $DB->get_records('equella');
 		$pattern = "/(?P<uuid>[\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12})\/(?P<version>[0-9]*)\/(?P<path>.*)/";
-	
-		foreach ($equella_items as $item) 
+
+		foreach ($equella_items as $item)
 		{
 			$url = $item->url;
 			preg_match($pattern, $url, $matches);
@@ -92,17 +92,32 @@ function xmldb_equella_upgrade($oldversion) {
 
         upgrade_mod_savepoint(true, 2011080500, 'equella');
     }
-    
+
     if ($oldversion < 2012010901)
     {
     	$table = new xmldb_table('equella');
     	$field = new xmldb_field('attachmentuuid', XMLDB_TYPE_TEXT, 'medium', null, null, null, null, 'path');
-    	if (!$dbman->field_exists($table, $field)) 
+    	if (!$dbman->field_exists($table, $field))
     	{
     		$dbman->add_field($table, $field);
     	}
-    	
+
     	upgrade_mod_savepoint(true, 2012010901, 'equella');
+    }
+
+    if ($oldversion < 2012101500) {
+
+        // Define field displaymode to be added to equella
+        $table = new xmldb_table('equella');
+        $field = new xmldb_field('displaymode', XMLDB_TYPE_INTEGER, '4', null, XMLDB_NOTNULL, null, '0', 'url');
+
+        // Conditionally launch add field displaymode
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // EQUELLA module savepoint reached
+        upgrade_mod_savepoint(true, 2012101500, 'equella');
     }
 
     return true;
