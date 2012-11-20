@@ -449,7 +449,8 @@ class equella_external extends external_api {
 
     public static function find_usage_for_item($user, $uuid, $version, $isLatest, $archived, $allVersion)
     {
-        global $DB;
+        global $DB, $CFG;
+        require_once($CFG->dirroot . '/repository/lib.php');
 
         $params = self::validate_parameters(self::find_usage_for_item_parameters(),
             array(
@@ -506,7 +507,65 @@ class equella_external extends external_api {
             $course = null;
         }
 
+        // Looking for file references
+        $instances = repository::get_instances(array('type'=>'equella'));
+        $fs = get_file_storage();
+        foreach ($instances as $equella) {
+            if ($equella->get_option('equella_url') == $CFG->equella_url) {
+                // lookfor files
+                $files = $fs->get_external_files($equella->id);
+                foreach ($files as $file) {
+                    $ref = unserialize(base64_decode($file->get_reference()));
+                    $matches = array();
+                    $matches = self::parse_resource_url($ref->url);
+                    $fileuuid = $matches['uuid'];
+                    if ($fileuuid = $uuid) {
+                        $content[] = self::convert_storedfile($file);
+                    }
+                }
+            }
+        }
+
         return array('results' => $content);
+    }
+    private static function parse_resource_url($url) {
+        $matches = array();
+        $pattern = "/(?P<uuid>[\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12})\/(?P<version>[0-9]*)\/(?P<path>.*)/";
+        preg_match($pattern, $url, $matches);
+        return $matches;
+    }
+    public static function convert_storedfile($file) {
+        $course = null;
+        $matches = array();
+        $matches = self::parse_resource_url($ref->url);
+        $fileuuid = $matches['uuid'];
+        $contextid = $file->get_contextid();
+        $context = context::instance_by_id($contextid);
+        flog($context);
+        flog($context->get_parent_contexts());
+
+        return array(
+            // because id is private
+            'id' => $file->get_contenthash(),
+            'coursename' => null,
+            'courseid' => null,
+            'section' => null,
+            'sectionid' => null,
+            'dateAdded' => $file->get_timecreated()*1000,
+            'dateModified' => $file->get_timemodified()*1000,
+            'uuid' => $fileuuid,
+            'version' => $matches['version'],
+            'attachment' => $matches['path'],
+            'attachmentUuid' => $fileuuid,
+            'moodlename' => $file->get_filename(),
+            'moodledescription' => null,
+            'coursecode' => null,
+            'instructor' => null,
+            'dateAccessed' => null,
+            'enrollments' => null,
+            'visible' => 1,
+            'attributes' => array(),
+        );
     }
 
 
