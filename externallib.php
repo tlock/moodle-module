@@ -541,13 +541,12 @@ class equella_external extends external_api {
         $fileuuid = $matches['uuid'];
         $contextid = $file->get_contextid();
         $context = context::instance_by_id($contextid);
-        flog($context);
-        flog($context->get_parent_contexts());
+        $url = moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(), $file->get_filearea(), $file->get_itemid(), $file->get_filepath(), $file->get_filename());
 
         return array(
             // because id is private
             'id' => $file->get_contenthash(),
-            'coursename' => null,
+            'coursename' => $file->get_filename(),
             'courseid' => null,
             'section' => null,
             'sectionid' => null,
@@ -564,7 +563,10 @@ class equella_external extends external_api {
             'dateAccessed' => null,
             'enrollments' => null,
             'visible' => 1,
-            'attributes' => array(),
+            'attributes' => array(
+                array('key'=>'type', 'value'=> 'file'),
+                array('key'=>'fileurl', 'value'=> $url->out()),
+            ),
         );
     }
 
@@ -753,7 +755,10 @@ class equella_external extends external_api {
             'instructor' => $instructor,
             'dateAccessed' => $dateAccessed,
             'enrollments' => $enrollments,
-            'visible' => $visible
+            'visible' => $visible,
+            'attributes' => array(
+                array('key'=>'type', 'value'=> 'module'),
+            ),
 
         );
     }
