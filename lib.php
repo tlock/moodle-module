@@ -403,4 +403,49 @@ class equella_exception extends Exception {
  * @return void adds items into $activities and increases $index
  */
 function equella_get_recent_mod_activity(&$activities, &$index, $timestart, $courseid, $cmid, $userid=0, $groupid=0)  {
+    global $COURSE, $USER, $DB;
+
+    if ($COURSE->id == $courseid) {
+        $course = $COURSE;
+    } else {
+        $course = $DB->get_record('course', array('id' => $courseid));
+    }
+
+    $modinfo = get_fast_modinfo($course);
+    $cm = $modinfo->cms[$cmid];
+    $context = context_module::instance($cm->id);
+
+    if (!has_capability('mod/glossary:view', $context)) {
+        return;
+    }
+
+    $viewfullnames = has_capability('moodle/site:viewfullnames', $context);
+    $accessallgroups = has_capability('moodle/site:accessallgroups', $context);
+    $groupmode = groups_get_activity_groupmode($cm, $course);
+
+    $params['timestart'] = $timestart;
+
+    $eqs = $DB->get_records('equella');
+    $sql = "SELECT eq.*
+              FROM {equella} eq
+             WHERE eq.timemodified > :timestart
+          ORDER BY eq.timemodified ASC";
+    $instances = $DB->get_records_sql($sql, $params);
+
+    foreach ($instances as $instance) {
+        $tmpactivity                       = new stdClass();
+        $tmpactivity->type                 = 'equella';
+        $tmpactivity->cmid                 = $cm->id;
+        $tmpactivity->name                 = format_string($cm->name, true);
+        $tmpactivity->sectionnum           = $cm->sectionnum;
+        $tmpactivity->timestamp            = $instance->timemodified;
+        $tmpactivity->content              = new stdClass();
+        $tmpactivity->content->name        = $instance->name;
+        $tmpactivity->content->uuid        = $instance->uuid;
+        $tmpactivity->content->intro       = $instance->intro;
+        $tmpactivity->content->introformat = $instance->introformat;
+        $activities[$index++] = $tmpactivity;
+    }
+
+    return true;
 }
