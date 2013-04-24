@@ -389,3 +389,18 @@ class equella_exception extends Exception {
         parent::__construct($message, 0);
     }
 }
+
+/**
+ * Returns all equella instances since a given time.
+ *
+ * @param array $activities sequentially indexed array of objects
+ * @param int   $index
+ * @param int   $timestart
+ * @param int   $courseid
+ * @param int   $cmid
+ * @param int   $userid defaults to 0
+ * @param int   $groupid defaults to 0
+ * @return void adds items into $activities and increases $index
+ */
+function equella_get_recent_mod_activity(&$activities, &$index, $timestart, $courseid, $cmid, $userid=0, $groupid=0)  {
+}
